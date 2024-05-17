@@ -1,4 +1,4 @@
-package org.soft863;
+package org.soft;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -16,16 +16,16 @@ import java.util.ArrayList;
 
 public class Main {
     protected static final String COOKIE = "";  // 登录账号cookie
-    protected static final String FILE_NAME = "";    // 文件保存路径
+    protected static final String FILE_NAME = "";    // 文件保存路径，后面要以 文件名.xlsx 结尾
     protected static final String FIND_NAME = ""; // 搜索关键字
 
     public static void main(String[] args) {
         try {
             // 省份代码
             ArrayList<Integer> provinces = new ArrayList<>();
-            provinces.add(530);
-            provinces.add(532);
-            provinces.add(545);
+            provinces.add(530); // 北京
+            provinces.add(532); // 河北
+            provinces.add(545); // 河南
 
             for (Integer province : provinces) {
                 int i = 1;
@@ -41,12 +41,18 @@ public class Main {
         }
     }
 
+    /**
+     * 根据地区代码，获取每页的岗位数据
+     * @param i 页数
+     * @param province 地区代码
+     * @return
+     * @throws IOException
+     */
     private static String getElements(int i, int province) throws IOException {
         ArrayList<Post> data = new ArrayList<>();
         // 使用Jsoup连接到指定的网址，并获取HTML内容
         String urlLong = "https://sou.zhaopin.com/?jl=" + province + "&kw=" + FIND_NAME + "&p=" + i;
-        // cookie
-//        String cookie = "";
+
         Document doc = Jsoup.connect(urlLong).cookie("Cookie", COOKIE).get();
 
         Elements elements = doc.getElementsByClass("positionlist");
@@ -78,8 +84,6 @@ public class Main {
         }
 
         // 导出
-        String fileName = "";
-
         File file = new File(FILE_NAME);
         if (file.isFile()) {
             appendDate(FILE_NAME, data);
@@ -88,11 +92,14 @@ public class Main {
         }
 
         // 获取页码
-        String soupager_index = elements.first().getElementsByClass("soupager__index").last().html();
-        return soupager_index;
+        return elements.first().getElementsByClass("soupager__index").last().html();
     }
 
-    /*追加数据*/
+    /**
+     * 追加数据
+     * @param filename
+     * @param posts
+     */
     public static void appendDate(String filename, ArrayList<Post> posts) {
         try {
             FileInputStream fileInputStream = new FileInputStream(filename);
@@ -120,10 +127,17 @@ public class Main {
             System.out.println("excel导出异常");
             throw new RuntimeException(e);
         } catch (IOException e) {
+            System.out.println("IO流异常");
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * 新建保存数据文件
+     * @param posts
+     * @param a
+     * @throws IOException
+     */
     public static void exportToExcel(ArrayList<Post> posts, String a) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Posts");
